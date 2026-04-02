@@ -83,13 +83,23 @@ window.createOrigin100i = function(THREE) {
     const nose = createHoloPart(noseGeo, true, 20);
     activeShipGroup.add(nose);
 
-    // 3. Rear Taper (Housing the engine assembly)
-    const rearGeo = new THREE.ConeGeometry(1.6, 3, 64);
-    rearGeo.rotateX(Math.PI / 2); // point tip backward
-    rearGeo.scale(1, 0.35, 1);
-    rearGeo.translate(0, 0.5, -6.5);
-    const rear = createHoloPart(rearGeo, true, 20);
-    activeShipGroup.add(rear);
+    // 3. Rear Fuselage & Twin Engine Housing (Replaces simple cone)
+    const rearShape = new THREE.Shape();
+    rearShape.moveTo(1.5, 0);     // Front connection width
+    rearShape.lineTo(2.2, -2.0);  // Widen for engine nacelles
+    rearShape.lineTo(2.0, -4.0);  // Taper back
+    rearShape.lineTo(0.5, -5.5);  // Central tail end
+    rearShape.lineTo(-0.5, -5.5);
+    rearShape.lineTo(-2.0, -4.0);
+    rearShape.lineTo(-2.2, -2.0);
+    rearShape.lineTo(-1.5, 0);
+
+    const rearExtrude = { depth: 1.0, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.2, bevelThickness: 0.2 };
+    const rearGeo = new THREE.ExtrudeGeometry(rearShape, rearExtrude);
+    rearGeo.rotateX(Math.PI / 2); // Lay flat
+    rearGeo.translate(0, 0.3, -4.8); // Position behind mid-hull
+    const rearHull = createHoloPart(rearGeo, true, 25);
+    activeShipGroup.add(rearHull);
 
     // 4. Canopy (Dark teardrop glass)
     const canopyGeo = new THREE.SphereGeometry(1.3, 48, 24);
@@ -136,7 +146,7 @@ window.createOrigin100i = function(THREE) {
     // 7. Signature Rear Spoiler (The Arch)
     const archGeo = new THREE.TorusGeometry(3.0, 0.18, 16, 64, Math.PI);
     archGeo.rotateX(-Math.PI / 2.8); // Sweeps the arch gracefully towards the tail
-    archGeo.translate(0, 0.2, -4.5);
+    archGeo.translate(0, 0.5, -6.5); // Moved further back and slightly up
     const arch = createHoloPart(archGeo, false, 30);
     activeShipGroup.add(arch);
 
@@ -155,18 +165,30 @@ window.createOrigin100i = function(THREE) {
     leftIntake.rotation.y = Math.PI / 16;
     activeShipGroup.add(leftIntake);
 
-    // 9. Engine Exhaust Housing
-    const exhaustGeo = new THREE.CylinderGeometry(0.8, 0.6, 1.5, 32);
+    // 9. Twin Engine Exhausts
+    const exhaustGeo = new THREE.CylinderGeometry(0.7, 0.6, 1.8, 32);
     exhaustGeo.rotateX(Math.PI / 2);
-    const exhaust = createHoloPart(exhaustGeo, true, 20);
-    exhaust.position.set(0, 0.5, -8.5);
-    activeShipGroup.add(exhaust);
 
-    // 10. Inner Engine Glow (Thruster)
-    const engineCore = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), coreMat);
-    engineCore.position.set(0, 0.5, -9.0);
-    engineCore.scale.set(1, 0.6, 1);
-    activeShipGroup.add(engineCore);
+    const leftExhaust = createHoloPart(exhaustGeo, true, 20);
+    leftExhaust.position.set(-1.4, 0.3, -8.0);
+    activeShipGroup.add(leftExhaust);
+
+    const rightExhaust = createHoloPart(exhaustGeo, true, 20);
+    rightExhaust.position.set(1.4, 0.3, -8.0);
+    activeShipGroup.add(rightExhaust);
+
+    // 10. Twin Engine Glows
+    const coreGeo = new THREE.SphereGeometry(0.55, 16, 16);
+
+    const leftCore = new THREE.Mesh(coreGeo, coreMat);
+    leftCore.position.set(-1.4, 0.3, -8.6);
+    leftCore.scale.set(1, 0.7, 1);
+    activeShipGroup.add(leftCore);
+
+    const rightCore = new THREE.Mesh(coreGeo, coreMat);
+    rightCore.position.set(1.4, 0.3, -8.6);
+    rightCore.scale.set(1, 0.7, 1);
+    activeShipGroup.add(rightCore);
 
     // 11. Winglets (Vertical Stabilizers at the wing tips)
     const finShape = new THREE.Shape();
