@@ -1,45 +1,56 @@
 /**
- * Detailed Origin Jumpworks 100i - 3D Wireframe Model Generator
- * This script attaches `createOrigin100i` to the global window object.
- * When called, it returns a fully constructed THREE.Group containing the detailed ship.
+ * Highly Detailed Origin Jumpworks 100i - 3D Wireframe Model Generator
+ * Procedurally constructed using advanced composite geometries for a sleek aerodynamic profile.
  */
 
 window.createOrigin100i = function(THREE) {
     const activeShipGroup = new THREE.Group();
     
-    // Set an initial cool dynamic angle
+    // Dynamic display angle (Cinematic 3/4 view)
     activeShipGroup.rotation.set(0.2, -0.6, 0.1); 
 
-    // --- Materials ---
-    // Solid core to mask background and back-faces
+    // --- Advanced Materials ---
+    // Solid core to mask background and back-faces. 
+    // PolygonOffset pushes the solid mesh back slightly in the render depth buffer to prevent Z-fighting with the lines.
     const solidMat = new THREE.MeshBasicMaterial({
         color: 0x0f172a, 
         transparent: true,
-        opacity: 0.95,
-        depthWrite: true
+        opacity: 0.92,
+        depthWrite: true,
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1
     });
 
-    // Glowing wireframe edges
+    // Glowing structural wireframe edges
     const lineMat = new THREE.LineBasicMaterial({
         color: 0x38bdf8,
         transparent: true,
-        opacity: 1.0
+        opacity: 1.0,
+        linewidth: 1
     });
 
-    // Classic hologram grid (used sparingly on organic shapes like the canopy)
+    // Classic hologram surface grid (used sparingly on organic curves)
     const gridMat = new THREE.MeshBasicMaterial({
         color: 0x0ea5e9,
         wireframe: true,
         transparent: true,
-        opacity: 0.15
+        opacity: 0.08
     });
 
-    // Helper function to create a solid object with glowing structural edges
-    function createHoloPart(geometry, showGrid = false, edgeThreshold = 15) {
+    // Engine Core glow
+    const coreMat = new THREE.MeshBasicMaterial({ 
+        color: 0xbae6fd, 
+        transparent: true, 
+        opacity: 0.9 
+    });
+
+    // Helper function: Bundles the solid mesh and glowing edges into a single part
+    function createHoloPart(geometry, showGrid = false, edgeThreshold = 18) {
         const group = new THREE.Group();
         const mesh = new THREE.Mesh(geometry, solidMat);
         
-        // EdgesGeometry hides the ugly triangulation diagonals, showing sharp structural lines
+        // EdgesGeometry isolates the sharp architectural lines instead of rendering messy triangulation diagonals
         const edges = new THREE.EdgesGeometry(geometry, edgeThreshold);
         const lines = new THREE.LineSegments(edges, lineMat);
         
@@ -53,135 +64,140 @@ window.createOrigin100i = function(THREE) {
         return group;
     }
 
-    // --- SHIP ASSEMBLY ---
+    // --- SHIP ASSEMBLY (Length ~19m, Beam ~11m) ---
+    // Note: The ship is oriented to point forward along the positive Z-axis.
 
-    // 1. Main Hull Core (Extruded Profile)
-    const hullShape = new THREE.Shape();
-    hullShape.moveTo(0, 9.5); // Nose tip
-    hullShape.lineTo(1.2, 8.5); // Snout curve
-    hullShape.lineTo(1.8, 4.0); // Cockpit side
-    hullShape.lineTo(5.5, -2.5); // Swept wing leading edge
-    hullShape.lineTo(5.5, -3.5); // Wing tip width
-    hullShape.lineTo(2.5, -5.0); // Wing trailing edge
-    hullShape.lineTo(2.0, -8.5); // Rear engine housing
-    hullShape.lineTo(-2.0, -8.5); // Rear exhaust block
-    hullShape.lineTo(-2.5, -5.0); // Left wing trailing
-    hullShape.lineTo(-5.5, -3.5); // Left wing tip
-    hullShape.lineTo(-5.5, -2.5); // Left wing leading
-    hullShape.lineTo(-1.8, 4.0); // Left cockpit side
-    hullShape.lineTo(-1.2, 8.5); // Left snout
-    hullShape.lineTo(0, 9.5); // Back to Nose
+    // 1. Central Fuselage Core (Tapered aerodynamic cylinder)
+    const midGeo = new THREE.CylinderGeometry(2.2, 1.6, 8, 64);
+    midGeo.rotateX(-Math.PI / 2); // align along Z, wider at the front
+    midGeo.scale(1, 0.35, 1); // Flatten to a sleek profile
+    midGeo.translate(0, 0.5, -1);
+    const midHull = createHoloPart(midGeo, true, 20);
+    activeShipGroup.add(midHull);
 
-    const hullExtrudeSettings = { depth: 0.8, bevelEnabled: true, bevelSegments: 4, steps: 2, bevelSize: 0.3, bevelThickness: 0.4 };
-    const hullGeo = new THREE.ExtrudeGeometry(hullShape, hullExtrudeSettings);
-    hullGeo.rotateX(Math.PI / 2);
-    hullGeo.translate(0, 0.4, 0);
-    const hull = createHoloPart(hullGeo, true, 20); 
-    activeShipGroup.add(hull);
+    // 2. Nose (The iconic Origin 'Duck Bill')
+    const noseGeo = new THREE.ConeGeometry(2.2, 6, 64);
+    noseGeo.rotateX(-Math.PI / 2); // point tip forward
+    noseGeo.scale(1, 0.35, 1); // match mid-hull flattening
+    noseGeo.translate(0, 0.5, 6); // align base with mid-hull front
+    const nose = createHoloPart(noseGeo, true, 20);
+    activeShipGroup.add(nose);
 
-    // 2. Canopy (Sleek teardrop dome)
-    const canopyGeo = new THREE.SphereGeometry(1, 32, 16);
-    canopyGeo.scale(1.2, 0.8, 3.5);
-    canopyGeo.translate(0, 1.2, 1.5);
-    const canopy = createHoloPart(canopyGeo, true, 45);
+    // 3. Rear Taper (Housing the engine assembly)
+    const rearGeo = new THREE.ConeGeometry(1.6, 3, 64);
+    rearGeo.rotateX(Math.PI / 2); // point tip backward
+    rearGeo.scale(1, 0.35, 1);
+    rearGeo.translate(0, 0.5, -6.5);
+    const rear = createHoloPart(rearGeo, true, 20);
+    activeShipGroup.add(rear);
+
+    // 4. Canopy (Dark teardrop glass)
+    const canopyGeo = new THREE.SphereGeometry(1.3, 48, 24);
+    canopyGeo.scale(1, 0.6, 2.8);
+    canopyGeo.translate(0, 1.2, 1.0);
+    const canopy = createHoloPart(canopyGeo, true, 40);
     activeShipGroup.add(canopy);
 
-    // 3. Canopy Frame / Rim (Adds detail lines around the glass)
-    const canopyRimGeo = new THREE.TorusGeometry(1.2, 0.08, 8, 32);
-    canopyRimGeo.scale(1, 1, 2.9);
-    canopyRimGeo.rotateX(Math.PI / 2);
-    canopyRimGeo.translate(0, 1.2, 1.5);
-    const canopyRim = createHoloPart(canopyRimGeo, false);
-    activeShipGroup.add(canopyRim);
+    // 5. Lower Belly (Subtle downward curve for the cargo bay/landing gear)
+    const bellyScoopGeo = new THREE.CylinderGeometry(1.2, 1.2, 6, 32);
+    bellyScoopGeo.rotateX(Math.PI / 2);
+    bellyScoopGeo.scale(1, 0.3, 1);
+    bellyScoopGeo.translate(0, -0.2, -1);
+    const bellyScoop = createHoloPart(bellyScoopGeo, false, 20);
+    activeShipGroup.add(bellyScoop);
 
-    // 4. Underbelly (Adds aerodynamic bulk to the flat extrusion)
-    const bellyGeo = new THREE.SphereGeometry(1, 32, 16);
-    bellyGeo.scale(1.6, 0.6, 5.0);
-    bellyGeo.translate(0, -0.2, -1.0);
-    const belly = createHoloPart(bellyGeo, true, 45);
-    activeShipGroup.add(belly);
+    // 6. Swept Delta Wings
+    const wingShape = new THREE.Shape();
+    wingShape.moveTo(0, 4); // Root front
+    wingShape.lineTo(5.5, -2); // Tip front
+    wingShape.lineTo(5.5, -4.5); // Tip trailing edge
+    wingShape.lineTo(0, -6); // Root trailing edge
+    
+    const leftWingShape = new THREE.Shape();
+    leftWingShape.moveTo(0, 4);
+    leftWingShape.lineTo(-5.5, -2);
+    leftWingShape.lineTo(-5.5, -4.5);
+    leftWingShape.lineTo(0, -6);
 
-    // 5. Signature Rear Spoiler (Hoop/Arch) - Upgraded with varying thickness
-    const archGeo = new THREE.TorusGeometry(2.4, 0.25, 16, 48, Math.PI);
-    archGeo.rotateX(-Math.PI / 4.5);
-    archGeo.translate(0, 0.8, -7.5);
+    const extrudeSettings = { depth: 0.15, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.05, bevelThickness: 0.05 };
+    
+    const rightWingGeo = new THREE.ExtrudeGeometry(wingShape, extrudeSettings);
+    rightWingGeo.rotateX(Math.PI / 2); // lay flat
+    rightWingGeo.translate(0, 0.4, 0);
+    const rightWing = createHoloPart(rightWingGeo, false, 15);
+    activeShipGroup.add(rightWing);
+
+    const leftWingGeo = new THREE.ExtrudeGeometry(leftWingShape, extrudeSettings);
+    leftWingGeo.rotateX(Math.PI / 2); // lay flat
+    leftWingGeo.translate(0, 0.4, 0);
+    const leftWing = createHoloPart(leftWingGeo, false, 15);
+    activeShipGroup.add(leftWing);
+
+    // 7. Signature Rear Spoiler (The Arch)
+    const archGeo = new THREE.TorusGeometry(3.0, 0.18, 16, 64, Math.PI);
+    archGeo.rotateX(-Math.PI / 2.8); // Sweeps the arch gracefully towards the tail
+    archGeo.translate(0, 0.2, -4.5);
     const arch = createHoloPart(archGeo, false, 30);
     activeShipGroup.add(arch);
 
-    // 6. Spoiler Struts (Connecting arch to hull)
-    const strutGeo = new THREE.BoxGeometry(0.2, 1.5, 0.6);
-    const leftStrut = createHoloPart(strutGeo, false);
-    leftStrut.position.set(-1.8, 0.8, -6.5);
-    leftStrut.rotation.x = -Math.PI / 6;
-    leftStrut.rotation.z = Math.PI / 12;
-    activeShipGroup.add(leftStrut);
+    // 8. Front Air Intakes (Carved cheeks)
+    const intakeGeo = new THREE.CylinderGeometry(0.3, 0.5, 2.5, 4); 
+    intakeGeo.rotateX(-Math.PI / 2); // Point wide end forward
+    intakeGeo.rotateZ(Math.PI / 4); // Turn square into a diamond profile
     
-    const rightStrut = createHoloPart(strutGeo, false);
-    rightStrut.position.set(1.8, 0.8, -6.5);
-    rightStrut.rotation.x = -Math.PI / 6;
-    rightStrut.rotation.z = -Math.PI / 12;
-    activeShipGroup.add(rightStrut);
-
-    // 7. Winglets (Vertical Stabilizers at wingtips)
-    const finGeo = new THREE.BoxGeometry(0.15, 1.8, 1.5);
-    finGeo.translate(0, 0.9, 0); 
-    finGeo.rotateX(-Math.PI / 6); 
-
-    const leftFin = createHoloPart(finGeo, false);
-    leftFin.position.set(-5.3, 0.2, -3.2);
-    leftFin.rotation.z = -Math.PI / 8;
-    activeShipGroup.add(leftFin);
-
-    const rightFin = createHoloPart(finGeo, false);
-    rightFin.position.set(5.3, 0.2, -3.2);
-    rightFin.rotation.z = Math.PI / 8;
-    activeShipGroup.add(rightFin);
-
-    // 8. Front Intakes (Detailed geometric recesses in the nose)
-    const intakeGeo = new THREE.BoxGeometry(1.6, 0.5, 1.2);
-    
-    const rightIntake = createHoloPart(intakeGeo, false);
-    rightIntake.position.set(1.4, 0.1, 7.8);
-    rightIntake.rotation.y = Math.PI / 12;
+    const rightIntake = createHoloPart(intakeGeo, false, 10);
+    rightIntake.position.set(1.4, 0.5, 4.0);
+    rightIntake.rotation.y = -Math.PI / 16; // Hug inward to the tapering hull
     activeShipGroup.add(rightIntake);
 
-    const leftIntake = createHoloPart(intakeGeo, false);
-    leftIntake.position.set(-1.4, 0.1, 7.8);
-    leftIntake.rotation.y = -Math.PI / 12;
+    const leftIntake = createHoloPart(intakeGeo, false, 10);
+    leftIntake.position.set(-1.4, 0.5, 4.0);
+    leftIntake.rotation.y = Math.PI / 16;
     activeShipGroup.add(leftIntake);
 
-    // 9. Main Engine Exhaust Block
-    const exhaustGeo = new THREE.BoxGeometry(3.8, 0.8, 0.8);
-    const exhaust = createHoloPart(exhaustGeo, false);
-    exhaust.position.set(0, 0.4, -8.6);
+    // 9. Engine Exhaust Housing
+    const exhaustGeo = new THREE.CylinderGeometry(0.8, 0.6, 1.5, 32);
+    exhaustGeo.rotateX(Math.PI / 2);
+    const exhaust = createHoloPart(exhaustGeo, true, 20);
+    exhaust.position.set(0, 0.5, -8.5);
     activeShipGroup.add(exhaust);
 
-    // 10. Engine Thruster Cones
-    const thrusterGeo = new THREE.CylinderGeometry(0.4, 0.6, 0.8, 16);
-    thrusterGeo.rotateX(Math.PI / 2);
+    // 10. Inner Engine Glow (Thruster)
+    const engineCore = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), coreMat);
+    engineCore.position.set(0, 0.5, -9.0);
+    engineCore.scale.set(1, 0.6, 1);
+    activeShipGroup.add(engineCore);
+
+    // 11. Winglets (Vertical Stabilizers at the wing tips)
+    const finShape = new THREE.Shape();
+    finShape.moveTo(0, 0); // Bottom root
+    finShape.lineTo(0.8, 1.8); // Top leading edge (swept back)
+    finShape.lineTo(1.6, 1.8); // Top trailing edge
+    finShape.lineTo(1.0, 0); // Bottom trailing edge
     
-    const mainThruster = createHoloPart(thrusterGeo, true);
-    mainThruster.position.set(0, 0.4, -9.0);
-    activeShipGroup.add(mainThruster);
-
-    // 11. Wing Paneling Details (Forces EdgesGeometry to draw cool tech lines)
-    const panelGeo = new THREE.BoxGeometry(3.0, 0.1, 1.5);
+    const finExtrude = { depth: 0.08, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02 };
     
-    const leftPanel = createHoloPart(panelGeo, false);
-    leftPanel.position.set(-2.5, 0.82, -2.0);
-    leftPanel.rotation.y = -Math.PI / 16;
-    activeShipGroup.add(leftPanel);
+    const rightFinGeo = new THREE.ExtrudeGeometry(finShape, finExtrude);
+    rightFinGeo.rotateY(Math.PI / 2); // Rotate to lie along the Z axis (sweep back)
+    rightFinGeo.translate(-0.04, 0, 0.8); // Center locally
+    const rightFin = createHoloPart(rightFinGeo, false, 15);
+    rightFin.position.set(5.4, 0.4, -3.5);
+    rightFin.rotation.z = -Math.PI / 10; // Splay outwards
+    activeShipGroup.add(rightFin);
 
-    const rightPanel = createHoloPart(panelGeo, false);
-    rightPanel.position.set(2.5, 0.82, -2.0);
-    rightPanel.rotation.y = Math.PI / 16;
-    activeShipGroup.add(rightPanel);
+    const leftFinGeo = new THREE.ExtrudeGeometry(finShape, finExtrude);
+    leftFinGeo.rotateY(Math.PI / 2); 
+    leftFinGeo.translate(-0.04, 0, 0.8); 
+    const leftFin = createHoloPart(leftFinGeo, false, 15);
+    leftFin.position.set(-5.4, 0.4, -3.5);
+    leftFin.rotation.z = Math.PI / 10; // Splay outwards
+    activeShipGroup.add(leftFin);
 
-    // 12. Nose Paneling / Access Hatch
-    const nosePanelGeo = new THREE.BoxGeometry(1.2, 0.1, 2.5);
-    const nosePanel = createHoloPart(nosePanelGeo, false);
-    nosePanel.position.set(0, 0.82, 6.5);
-    activeShipGroup.add(nosePanel);
+    // 12. Structural Paneling Details (Forces EdgeGeometry to draw tech lines across the hull)
+    const spineGeo = new THREE.BoxGeometry(1.2, 0.1, 4);
+    const spine = createHoloPart(spineGeo, false, 15);
+    spine.position.set(0, 0.8, -4);
+    activeShipGroup.add(spine);
 
     return activeShipGroup;
 };
